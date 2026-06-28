@@ -1,4 +1,4 @@
-import { login } from '../_utils/xlri';
+import { login } from '../_utils/xlri.js';
 
 export async function onRequest(context) {
   const { request } = context;
