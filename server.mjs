@@ -298,6 +298,9 @@ body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Menlo', 'Consolas
 .sidebar-item { padding: 8px 24px; font-size: 12px; font-weight: 500; color: var(--sidebar-text); cursor: pointer; transition: all .1s; border-left: 2px solid transparent; }
 .sidebar-item:hover { color: var(--sidebar-text-hover); }
 .sidebar-item.active { color: var(--sidebar-active-text); border-left-color: var(--sidebar-active-border); }
+.sidebar-top { display: contents; }
+.hamburger { display: none; background: none; border: none; color: var(--sidebar-text); cursor: pointer; font-size: 18px; padding: 0; line-height: 1; font-family: inherit; }
+.hamburger:hover { color: var(--sidebar-text-hover); }
 .sidebar-spacer { flex: 1; }
 .sidebar-footer { padding: 16px 24px 0; border-top: 1px solid var(--sidebar-border); }
 .main { flex: 1; min-width: 0; padding: 40px; }
@@ -354,13 +357,17 @@ tbody tr:hover { background: var(--table-row-hover); }
 
 @media (max-width: 768px) {
   body { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; flex-direction: row; padding: 12px 16px; border-right: none; border-bottom: 1px solid var(--sidebar-border); position: sticky; top: 0; overflow: visible; align-items: center; gap: 12px; }
-  .sidebar h1 { margin-bottom: 0; font-size: 10px; white-space: nowrap; }
-  .sidebar h1 br { display: none; }
-  .sidebar-item { padding: 6px 10px; border-left: none; border-bottom: 2px solid transparent; font-size: 11px; white-space: nowrap; }
-  .sidebar-item.active { border-left: none; border-bottom-color: var(--sidebar-active-border); }
-  .sidebar-spacer { flex: 1; }
-  .sidebar-footer { padding: 0; border-top: none; }
+  .sidebar { width: 100%; height: auto; flex-direction: column; padding: 0; border-right: none; border-bottom: 1px solid var(--sidebar-border); position: sticky; top: 0; overflow: visible; }
+  .sidebar-top { display: flex; flex-direction: row; align-items: center; padding: 12px 16px; gap: 12px; }
+  .sidebar-top h1 { margin-bottom: 0; font-size: 10px; white-space: nowrap; flex: 1; }
+  .sidebar-top h1 br { display: none; }
+  .hamburger { display: block; }
+  #sidebarItems { display: none; }
+  #sidebarItems.open { display: flex; flex-direction: column; border-top: 1px solid var(--sidebar-border); }
+  #sidebarItems .sidebar-item { padding: 12px 16px; border-left: none; border-bottom: 1px solid var(--sidebar-border); font-size: 12px; }
+  #sidebarItems .sidebar-item.active { border-left: none; border-bottom: 2px solid var(--sidebar-active-border); }
+  #sidebarItems .sidebar-spacer { display: none; }
+  #sidebarItems .sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--sidebar-border); border-bottom: none; }
   .main { padding: 16px; }
   .card { padding: 16px; }
   .card h2 { margin-bottom: 16px; }
@@ -378,13 +385,18 @@ tbody tr:hover { background: var(--table-row-hover); }
 </head>
 <body>
 <div class="sidebar">
-  <h1>XLRI Schedule<br>Sync</h1>
-  <div class="sidebar-item active" data-view="ics" onclick="switchView('ics')">Download ICS</div>
-  <div class="sidebar-item" data-view="timetable" onclick="switchView('timetable')">Get Timetable</div>
-  <div class="sidebar-spacer"></div>
-  <div class="sidebar-footer">
-    <div class="theme-toggle" onclick="toggleTheme()">
-      <span id="themeLabel">Dark</span>
+  <div class="sidebar-top">
+    <h1>XLRI Schedule<br>Sync</h1>
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
+  </div>
+  <div id="sidebarItems">
+    <div class="sidebar-item active" data-view="ics" onclick="switchView('ics')">Download ICS</div>
+    <div class="sidebar-item" data-view="timetable" onclick="switchView('timetable')">Get Timetable</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeLabel">Dark</span>
+      </div>
     </div>
   </div>
 </div>
@@ -508,6 +520,10 @@ function toggleTheme() {
   setTheme(current === 'dark' ? 'light' : 'dark');
 }
 
+function toggleMobileNav() {
+  document.getElementById('sidebarItems').classList.toggle('open');
+}
+
 (function initTheme() {
   const stored = localStorage.getItem('theme');
   if (stored) {
@@ -575,6 +591,7 @@ function switchView(view) {
   document.querySelector('[data-view="' + view + '"]').classList.add('active');
   document.getElementById('view-ics').classList.toggle('hidden', view !== 'ics');
   document.getElementById('view-timetable').classList.toggle('hidden', view !== 'timetable');
+  document.getElementById('sidebarItems').classList.remove('open');
 }
 
 // ========== ICS VIEW ==========
