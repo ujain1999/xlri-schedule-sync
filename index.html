@@ -228,7 +228,7 @@ function timeToMinutes(t) {
 
 function switchView(view) {
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  document.querySelector(\`[data-view="\${view}"]\`).classList.add('active');
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
   document.getElementById('view-ics').classList.toggle('hidden', view !== 'ics');
   document.getElementById('view-timetable').classList.toggle('hidden', view !== 'timetable');
 }
