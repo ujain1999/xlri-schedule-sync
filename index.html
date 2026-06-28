@@ -651,13 +651,28 @@ async function downloadTimetablePNG() {
   btn.disabled = true;
   btn.textContent = 'Rendering...';
   try {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const bgColor = isDark ? '#0a0a0a' : '#ffffff';
     const el = document.getElementById('ttCard');
+
     const canvas = await html2canvas(el, {
-      backgroundColor: '#ffffff',
-      scale: 2,
+      backgroundColor: bgColor,
+      scale: 3,
       useCORS: true,
       logging: false,
+      windowWidth: 1280,
+      onclone: (clonedDoc) => {
+        const card = clonedDoc.getElementById('ttCard');
+        const tt = card.querySelector('.timetable');
+        card.style.width = 'max-content';
+        card.style.minWidth = '300px';
+        card.style.padding = '20px';
+        tt.style.overflow = 'visible';
+        tt.style.width = 'auto';
+        clonedDoc.body.style.cssText = 'width:max-content;overflow:visible;display:block;';
+      },
     });
+
     const link = document.createElement('a');
     link.download = 'timetable.png';
     link.href = canvas.toDataURL('image/png');
