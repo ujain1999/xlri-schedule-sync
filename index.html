@@ -139,6 +139,7 @@ body { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Menlo', 'Consolas
 .hamburger { display: none; background: none; border: none; color: var(--sidebar-text); cursor: pointer; font-size: 18px; padding: 0; line-height: 1; font-family: inherit; }
 .hamburger:hover { color: var(--sidebar-text-hover); }
 .sidebar-spacer { flex: 1; }
+#sidebarItems { display: flex; flex-direction: column; flex: 1; }
 .sidebar-footer { padding: 16px 24px 0; border-top: 1px solid var(--sidebar-border); }
 .main { flex: 1; min-width: 0; padding: 40px; }
 .card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 28px; margin-bottom: 20px; }
@@ -191,6 +192,8 @@ tbody tr:hover { background: var(--table-row-hover); }
 
 .theme-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px; color: var(--sidebar-text); text-transform: uppercase; letter-spacing: .05em; }
 .theme-toggle:hover { color: var(--sidebar-text-hover); }
+.github-link { display: block; margin-top: 8px; font-size: 10px; color: var(--sidebar-text); text-decoration: none; text-transform: uppercase; letter-spacing: .05em; }
+.github-link:hover { color: var(--sidebar-text-hover); text-decoration: underline; }
 
 @media (max-width: 768px) {
   body { flex-direction: column; }
@@ -234,6 +237,7 @@ tbody tr:hover { background: var(--table-row-hover); }
       <div class="theme-toggle" onclick="toggleTheme()">
         <span id="themeLabel">Dark</span>
       </div>
+      <a class="github-link" href="https://github.com/ujain1999/xlri-schedule-sync" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
 </div>
