@@ -13,6 +13,10 @@ project replaced -- kept only as a reference for the exact XLRI ERP API shapes.
 - Auth = Google OAuth only (no separate app password); the same consent grant
   provides identity *and* Calendar API access.
 - Self-hosted via Docker Compose, exposed through a Cloudflare Tunnel.
+- Auto-sync cadence is global, not per-user -- set once via `SYNC_INTERVAL_MINUTES`
+  in `.env` and it applies to every connected account. Users always have a
+  "Sync now" button for an on-demand update regardless of that interval; the
+  cadence is displayed on the login page and dashboard so it's never a surprise.
 - See `SECURITY.md` for the encryption/credential-storage model.
 
 ## Local development

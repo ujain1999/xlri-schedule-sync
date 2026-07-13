@@ -14,6 +14,9 @@ class Settings(BaseSettings):
 
     base_url: str = "http://localhost:8000"
 
+    # Global sync cadence for every user -- not per-user configurable, so one
+    # operator-controlled knob decides load on XLRI's ERP and the Google API.
+    sync_interval_minutes: int = 60
     scheduler_tick_seconds: int = 300
     scheduler_max_concurrent_syncs: int = 3
 

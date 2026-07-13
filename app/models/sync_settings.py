@@ -15,8 +15,6 @@ class SyncSettings(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    # Bounded [30, 180] in the API layer (Pydantic schema), not enforced at the DB level.
-    sync_interval_minutes: Mapped[int] = mapped_column(Integer, default=45, nullable=False)
     window_weeks_ahead: Mapped[int] = mapped_column(Integer, default=4, nullable=False)
     window_days_behind: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     # Drives the scheduler's "who's due" query each tick.

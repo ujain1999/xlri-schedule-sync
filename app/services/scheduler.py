@@ -25,13 +25,10 @@ async def get_due_user_ids() -> list:
     async with async_session() as db:
         result = await db.execute(select(SyncSettings).where(SyncSettings.enabled.is_(True)))
         now = datetime.now(timezone.utc)
+        interval = timedelta(minutes=settings.sync_interval_minutes)
         due = []
         for row in result.scalars().all():
-            if row.last_synced_at is None:
-                due.append(row.user_id)
-                continue
-            next_due_at = row.last_synced_at + timedelta(minutes=row.sync_interval_minutes)
-            if next_due_at <= now:
+            if row.last_synced_at is None or row.last_synced_at + interval <= now:
                 due.append(row.user_id)
         return due
 

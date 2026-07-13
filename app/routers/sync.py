@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings as app_settings
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.sync_run import SyncRun, SyncStatus
@@ -28,13 +29,23 @@ def _fire_and_forget(coro) -> None:
     task.add_done_callback(_background_tasks.discard)
 
 
+def _to_out(row: SyncSettings) -> SyncSettingsOut:
+    return SyncSettingsOut(
+        enabled=row.enabled,
+        window_weeks_ahead=row.window_weeks_ahead,
+        window_days_behind=row.window_days_behind,
+        last_synced_at=row.last_synced_at,
+        sync_interval_minutes=app_settings.sync_interval_minutes,
+    )
+
+
 @router.get("/settings", response_model=SyncSettingsOut)
 async def get_settings(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(SyncSettings).where(SyncSettings.user_id == user.id))
     row = result.scalar_one_or_none()
     if row is None:
         raise HTTPException(status_code=404, detail="Sync settings not found -- log in with Google first")
-    return row
+    return _to_out(row)
 
 
 @router.put("/settings", response_model=SyncSettingsOut)
@@ -51,7 +62,7 @@ async def update_settings(
 
     await db.commit()
     await db.refresh(row)
-    return row
+    return _to_out(row)
 
 
 @router.post("/now", status_code=status.HTTP_202_ACCEPTED)
