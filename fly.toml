@@ -1,0 +1,31 @@
+# Fly.io deployment config. Uses the same Dockerfile as the self-hosted setup --
+# no cloudflared needed here since Fly gives the app a public HTTPS endpoint directly.
+#
+# IMPORTANT: auto_stop_machines is off and min_machines_running = 1 on purpose.
+# The background sync scheduler (app/services/scheduler.py) only fires while the
+# process is running -- if Fly scaled the machine to zero on idle, scheduled syncs
+# would silently stop until the next incoming request woke it back up.
+#
+# IMPORTANT: keep machine count at exactly 1 (`fly scale count 1`). Fly's default
+# "create a second machine for HA" behavior is NOT safe here -- the scheduler has
+# no cross-instance locking, so two running machines would each independently pick
+# up the same due users and double-sync (duplicate Google Calendar API calls,
+# possible race conditions writing event_mappings). If HA is ever wanted, the
+# scheduler needs a distributed lock (e.g. a Postgres advisory lock) first.
+
+app = "xlri-schedule-sync"
+primary_region = "sin"  # Singapore -- matches the Postgres cluster's region (bom hit a zone capacity issue)
+
+[build]
+  dockerfile = "docker/Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
