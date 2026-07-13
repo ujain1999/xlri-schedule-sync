@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - XLRI Schedule Sync{% endblock %}
+{% block content %}
+<div class="main">
+  <header class="topbar">
+    <div>
+      <strong>{{ user.full_name or user.email }}</strong>
+      <div class="muted small">{{ user.email }}</div>
+    </div>
+    <form method="post" action="/auth/logout"><button class="btn btn-secondary" type="submit">Log out</button></form>
+  </header>
+
+  <div class="card">
+    <h2>XLRI ERP Connection</h2>
+    {% if xlri_creds %}
+      <p>
+        Connected as <strong>{{ xlri_creds.xlri_email }}</strong> --
+        {% if xlri_creds.is_verified %}
+          <span class="status-ok">verified</span>
+        {% else %}
+          <span class="status-error">needs attention{% if xlri_creds.last_error %}: {{ xlri_creds.last_error }}{% endif %}</span>
+        {% endif %}
+      </p>
+    {% else %}
+      <p class="muted">Not connected yet -- your schedule can't be synced until you add your ERP credentials.</p>
+    {% endif %}
+    <form id="xlriForm" class="form-grid">
+      <div><label>ERP Email</label><input type="email" id="xlriEmail" value="{{ xlri_creds.xlri_email if xlri_creds else '' }}" required></div>
+      <div><label>ERP Password</label><input type="password" id="xlriPassword" required></div>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">{{ 'Update' if xlri_creds else 'Connect' }}</button>
+        {% if xlri_creds %}<button class="btn btn-secondary" type="button" id="xlriDisconnect">Disconnect</button>{% endif %}
+      </div>
+    </form>
+    <div id="xlriStatus" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Sync Settings</h2>
+    <form id="settingsForm" class="form-grid">
+      <label class="checkbox"><input type="checkbox" id="syncEnabled" {% if sync_settings and sync_settings.enabled %}checked{% endif %}> Sync enabled</label>
+      <div><label>Sync interval (minutes)</label><input type="number" id="syncInterval" min="30" max="180" value="{{ sync_settings.sync_interval_minutes if sync_settings else 45 }}"></div>
+      <div><label>Weeks ahead</label><input type="number" id="windowWeeksAhead" min="1" max="12" value="{{ sync_settings.window_weeks_ahead if sync_settings else 4 }}"></div>
+      <div><label>Days behind</label><input type="number" id="windowDaysBehind" min="0" max="7" value="{{ sync_settings.window_days_behind if sync_settings else 1 }}"></div>
+      <div class="actions"><button class="btn btn-primary" type="submit">Save settings</button></div>
+    </form>
+    <div id="settingsStatus" class="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Sync Status</h2>
+      <button class="btn btn-primary" id="syncNowBtn">Sync now</button>
+    </div>
+    <p class="muted">Last synced: <span id="lastSynced">{{ sync_settings.last_synced_at if sync_settings and sync_settings.last_synced_at else 'never' }}</span></p>
+    {% if oauth_row and oauth_row.calendar_id %}
+      <p><a href="https://calendar.google.com/calendar/u/0?cid={{ oauth_row.calendar_id }}" target="_blank" rel="noopener">Open "XLRI Schedule" calendar in Google Calendar</a></p>
+    {% endif %}
+    <div id="syncNowStatus" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Recent Sync Runs</h2>
+    <table>
+      <thead><tr><th>Started</th><th>Status</th><th>Created</th><th>Updated</th><th>Deleted</th><th>Error</th></tr></thead>
+      <tbody>
+        {% for run in runs %}
+        <tr>
+          <td>{{ run.started_at }}</td>
+          <td>{{ run.status.value if run.status else '' }}</td>
+          <td>{{ run.events_created }}</td>
+          <td>{{ run.events_updated }}</td>
+          <td>{{ run.events_deleted }}</td>
+          <td>{{ run.error_message or '' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted">No sync runs yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}
