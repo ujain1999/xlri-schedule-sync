@@ -4,5 +4,12 @@
 *.ics
 .DS_Store
 .env
+.env.*
+!.env.example
 node_modules
 .wrangler
+__pycache__/
+*.pyc
+.venv/
+venv/
+backups/
