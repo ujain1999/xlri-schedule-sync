@@ -31,6 +31,10 @@ from app.services.xlri_client import (
 # XLRI's API returns local (India) dates/times with no timezone info.
 XLRI_TZ = timezone(timedelta(hours=5, minutes=30))
 
+# Fixed for every user, not configurable -- how far back/forward each sync fetches.
+WINDOW_DAYS_BEHIND = 1
+WINDOW_WEEKS_AHEAD = 4
+
 
 def _parse_dt(date_str: str, time_str: str) -> datetime:
     d = date.fromisoformat(date_str)
@@ -151,8 +155,8 @@ async def _do_sync(db: AsyncSession, user_id: UUID, run: SyncRun) -> None:
         return
 
     password = decrypt(xlri_creds.encrypted_password)
-    window_start = date.today() - timedelta(days=sync_settings.window_days_behind)
-    window_end = date.today() + timedelta(weeks=sync_settings.window_weeks_ahead)
+    window_start = date.today() - timedelta(days=WINDOW_DAYS_BEHIND)
+    window_end = date.today() + timedelta(weeks=WINDOW_WEEKS_AHEAD)
 
     async with make_client() as client:
         try:

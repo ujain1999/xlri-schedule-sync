@@ -39,8 +39,6 @@
     <h2>Sync Settings</h2>
     <form id="settingsForm" class="form-grid">
       <label class="checkbox"><input type="checkbox" id="syncEnabled" {% if sync_settings and sync_settings.enabled %}checked{% endif %}> Sync enabled</label>
-      <div><label>Weeks ahead</label><input type="number" id="windowWeeksAhead" min="1" max="12" value="{{ sync_settings.window_weeks_ahead if sync_settings else 4 }}"></div>
-      <div><label>Days behind</label><input type="number" id="windowDaysBehind" min="0" max="7" value="{{ sync_settings.window_days_behind if sync_settings else 1 }}"></div>
       <div class="actions"><button class="btn btn-primary" type="submit">Save settings</button></div>
     </form>
     <div id="settingsStatus" class="status"></div>

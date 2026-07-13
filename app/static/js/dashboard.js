@@ -59,8 +59,6 @@ if (settingsForm) {
     e.preventDefault();
     const body = {
       enabled: document.getElementById('syncEnabled').checked,
-      window_weeks_ahead: parseInt(document.getElementById('windowWeeksAhead').value, 10),
-      window_days_behind: parseInt(document.getElementById('windowDaysBehind').value, 10),
     };
     setStatus('settingsStatus', 'info', 'Saving...');
     try {

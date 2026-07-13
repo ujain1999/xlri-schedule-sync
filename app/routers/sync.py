@@ -32,8 +32,6 @@ def _fire_and_forget(coro) -> None:
 def _to_out(row: SyncSettings) -> SyncSettingsOut:
     return SyncSettingsOut(
         enabled=row.enabled,
-        window_weeks_ahead=row.window_weeks_ahead,
-        window_days_behind=row.window_days_behind,
         last_synced_at=row.last_synced_at,
         sync_interval_minutes=app_settings.sync_interval_minutes,
     )
