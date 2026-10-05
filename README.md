@@ -12,7 +12,8 @@ project replaced -- kept only as a reference for the exact XLRI ERP API shapes.
 - FastAPI + Postgres, APScheduler running in-process (no Celery/Redis).
 - Auth = Google OAuth only (no separate app password); the same consent grant
   provides identity *and* Calendar API access.
-- Self-hosted via Docker Compose, exposed through a Cloudflare Tunnel.
+- Self-hosted via Docker Compose, deployed with quick-deploy (`qd`), which
+  exposes it through a shared Cloudflare Tunnel + Traefik on the server.
 - Auto-sync cadence is global, not per-user -- set once via `SYNC_INTERVAL_MINUTES`
   in `.env` and it applies to every connected account. Users always have a
   "Sync now" button for an on-demand update regardless of that interval; the
@@ -63,49 +64,39 @@ Prompts interactively so your password never ends up in shell history or a chat 
    - `https://<your-subdomain>.<your-domain>/auth/google/callback` (prod)
 4. Put the client ID/secret into `.env` as `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
 
-## Cloudflare Tunnel setup (production, on the laptop)
+## Deploying (quick-deploy)
 
-```
-cloudflared tunnel create xlri-schedule-sync
-cloudflared tunnel route dns xlri-schedule-sync <subdomain>.<your-domain>
-```
+Production runs on the home server through [quick-deploy](../quick_deploy) (`qd`),
+which owns the Cloudflare Tunnel and Traefik. This repo has no tunnel of its own;
+`qd` picks `docker-compose.yml`, routes `https://<name>.<domain>` to the `app`
+service on port 8000, and leaves `db` private.
 
-Grab the tunnel token from the Cloudflare Zero Trust dashboard (Networks -> Tunnels)
-and set it as `CLOUDFLARE_TUNNEL_TOKEN` in `.env`. Under the tunnel's **Public
-Hostnames**, map `<subdomain>.<your-domain>` to `http://app:8000` (the `app`
-service name in `docker-compose.yml`, reachable over the Compose network).
+First deploy (after `qd setup` has been done once for the server):
 
-## Deploying to the laptop
+1. Put production values in `.env` (it is synced to the server by `qd`):
+   - `BASE_URL=https://<name>.<domain>`
+   - `GOOGLE_REDIRECT_URI=https://<name>.<domain>/auth/google/callback`, also
+     added as a redirect URI on the Google OAuth client.
+2. `qd deploy --name <name>`
 
-First-time setup on the laptop:
+Subsequent deploys: `qd deploy` from this directory (it reuses the name). Logs:
+`qd logs <name> -s app`. Containers restart on reboot via `restart: unless-stopped`.
 
-```
-git clone <this repo>
-cd xlri_schedule_sync
-cp .env.example .env   # fill in real production values
-./deploy.sh
-```
-
-Subsequent deploys: SSH in and run `./deploy.sh` (pulls latest `main`, rebuilds,
-restarts). Deploys are intentionally manual, not an auto-pull timer -- see
-`scripts/xlri-schedule-sync.service` for reboot resilience only.
-
-To survive laptop reboots without a manual restart:
-
-```
-sudo cp scripts/xlri-schedule-sync.service /etc/systemd/system/
-sudo sed -i "s|WorkingDirectory=.*|WorkingDirectory=$(pwd)|" /etc/systemd/system/xlri-schedule-sync.service
-sudo systemctl enable --now xlri-schedule-sync.service
-```
+Keep it to one deployment: the scheduler has no cross-instance locking, so two
+copies would double-sync every user. **Never `qd rm <name> --volumes`** unless
+you mean to delete the database.
 
 ## Backups
 
+On the server:
+
 ```
 crontab -e
-# add: 0 3 * * * /home/<user>/xlri_schedule_sync/scripts/backup.sh >> /home/<user>/xlri_schedule_sync/backups/backup.log 2>&1
+# add: 0 3 * * * ~/.qd/apps/<name>/src/scripts/backup.sh >> ~/.qd/apps/<name>/src/backups/backup.log 2>&1
 ```
 
-Writes a daily `pg_dump` to `backups/`, retained 14 days. **Copy backups offsite**
+Writes a daily `pg_dump` to `backups/`, retained 14 days. `backups/` is in
+`.qdignore`, so redeploys neither overwrite nor delete it. **Copy backups offsite**
 (rclone, encrypted USB) periodically -- a laptop is a single point of failure for
 disk loss/theft. See `SECURITY.md` for why `ENCRYPTION_KEY` must be backed up
 separately from these dumps.

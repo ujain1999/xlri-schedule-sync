@@ -21,8 +21,12 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     env_file: .env
+    # .env holds production values (qd syncs it to the server), so pin the
+    # local-only ones here.
     environment:
       - DATABASE_URL=postgresql+asyncpg://devuser:devpass@db:5432/xlri_sync_dev
+      - BASE_URL=http://localhost:8000
+      - GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
     volumes:
       - .:/app
     ports:

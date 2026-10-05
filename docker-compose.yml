@@ -17,18 +17,13 @@ services:
       dockerfile: docker/Dockerfile
     restart: unless-stopped
     env_file: .env
+    # Not published to the host: quick-deploy's shared Traefik reaches it over
+    # the `qd` network and routes <name>.<domain> here.
+    expose:
+      - "8000"
     depends_on:
       db:
         condition: service_healthy
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-    depends_on:
-      - app
 
 volumes:
   pgdata:

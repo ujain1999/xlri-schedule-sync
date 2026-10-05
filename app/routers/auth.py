@@ -97,7 +97,7 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
         value=raw_session_token,
         max_age=SESSION_TTL_DAYS * 24 * 3600,
         httponly=True,
-        secure=request.url.scheme == "https",
+        secure=settings.base_url.startswith("https"),
         samesite="lax",
     )
     return response

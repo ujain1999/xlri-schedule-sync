@@ -1,0 +1,6 @@
+# rsync excludes for `qd deploy` (see ~/dev/quick_deploy). Excluded paths are also
+# protected from rsync --delete, so server-side backups survive redeploys.
+/backups
+/legacy
+/.wrangler
+/.claude
