@@ -8,7 +8,7 @@ import json
 from datetime import date, datetime, time, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session
@@ -194,6 +194,7 @@ async def _do_sync(db: AsyncSession, user_id: UUID, run: SyncRun) -> None:
 
     normalized = [_normalize_session(s) for s in sessions] + [_normalize_activity(a) for a in activities]
 
+    previous_calendar_id = oauth_row.calendar_id
     try:
         calendar_id = await google_calendar.ensure_dedicated_calendar(db, oauth_row)
     except google_calendar.GoogleCalendarDisconnected as exc:
@@ -201,6 +202,12 @@ async def _do_sync(db: AsyncSession, user_id: UUID, run: SyncRun) -> None:
         run.error_stage = ErrorStage.google_api
         run.error_message = str(exc)
         return
+
+    # A new calendar (e.g. the user deleted the old one in Google Calendar) means every
+    # existing mapping points at an event that no longer exists -- drop them so the diff
+    # below recreates everything instead of seeing it all as unchanged.
+    if calendar_id != previous_calendar_id:
+        await db.execute(delete(EventMapping).where(EventMapping.user_id == user_id))
 
     mapping_result = await db.execute(select(EventMapping).where(EventMapping.user_id == user_id))
     existing_mappings = {(m.source_type, m.source_id): m for m in mapping_result.scalars().all()}

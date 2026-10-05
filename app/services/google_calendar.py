@@ -66,12 +66,27 @@ def _build_service(creds: Credentials):
 
 async def ensure_dedicated_calendar(db: AsyncSession, oauth_row: GoogleOAuthToken) -> str:
     """Returns the dedicated "XLRI Schedule" secondary calendar's ID, creating it on
-    first use. All event CRUD targets this calendar, never the user's primary one."""
-    if oauth_row.calendar_id:
-        return oauth_row.calendar_id
-
+    first use -- or again if the user deleted it from Google Calendar, in which case the
+    returned ID differs from the previously stored one. All event CRUD targets this
+    calendar, never the user's primary one."""
     creds = await get_credentials(db, oauth_row)
     service = _build_service(creds)
+
+    if oauth_row.calendar_id:
+        calendar_id = oauth_row.calendar_id
+
+        def _exists() -> bool:
+            try:
+                service.calendars().get(calendarId=calendar_id).execute()
+                return True
+            except HttpError as exc:
+                if exc.resp.status in (404, 410):
+                    return False
+                raise
+
+        if await asyncio.to_thread(_exists):
+            return calendar_id
+
     calendar = await asyncio.to_thread(
         lambda: service.calendars()
         .insert(body={"summary": CALENDAR_SUMMARY, "description": CALENDAR_DESCRIPTION})
